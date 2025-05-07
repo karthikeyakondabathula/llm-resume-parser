@@ -1,7 +1,7 @@
 
 # LLM-PDF-Parser
 
-A **Resume Parser** powered by **Google Gemini API (genai)** that reads PDF resumes and extracts structured information in **JSON** and a **pretty printable PDF**.
+A **Resume Parser** powered by **Google Gemini** that reads PDF resumes and extracts structured information in **JSON** and a **common standard formatted printable PDF**.
 
 > ✅ Helps companies standardize all incoming resumes to a **common format for easier evaluation**!
 
