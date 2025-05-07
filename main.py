@@ -13,7 +13,7 @@ if not env_loaded:
 
 # === Initialize Gemini Client ===
 def get_client():
-    api_key = "AIzaSyCpfsDROoow1ozUo-FgvA6T8E7vyR7pj3I"
+    api_key = " "
     if not api_key:
         raise RuntimeError("GOOGLE_API_KEY not set in environment variables.")
     return genai.Client(api_key=api_key)
