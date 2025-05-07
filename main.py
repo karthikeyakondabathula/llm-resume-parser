@@ -4,6 +4,7 @@ from google import genai
 from google.genai import types
 import json_repair
 from fpdf import FPDF
+import json
 
 # === Load environment ===
 env_loaded = load_dotenv()
@@ -12,7 +13,7 @@ if not env_loaded:
 
 # === Initialize Gemini Client ===
 def get_client():
-    api_key = " "
+    api_key = "AIzaSyCpfsDROoow1ozUo-FgvA6T8E7vyR7pj3I"
     if not api_key:
         raise RuntimeError("GOOGLE_API_KEY not set in environment variables.")
     return genai.Client(api_key=api_key)
@@ -97,8 +98,9 @@ class PrettyPDF(FPDF):
 
 # === Main ===
 if __name__ == "__main__":
-    resume_path = " "
+    resume_path = "/content/Resume_Karthik.pdf"
     output_pdf_path = "parsed_resume_pretty.pdf"
+    output_json_path = "parsed_resume.json"
 
     if not os.path.isfile(resume_path):
         print(f"Error: File not found at '{resume_path}'.")
@@ -115,6 +117,11 @@ if __name__ == "__main__":
         for field in ['other', 'work', 'education', 'projects', 'achievements', 'certifications']:
             if field in data:
                 data[field] = json_repair.loads(data[field])
+
+        # Export the JSON data to a file
+        with open(output_json_path, 'w') as json_file:
+            json.dump(data, json_file, indent=4)
+        print(f"✅ JSON saved: {output_json_path}")
 
         # Load Unicode font → Download DejaVu fonts if not already
         if not os.path.isfile('DejaVuSans.ttf') or not os.path.isfile('DejaVuSans-Bold.ttf'):
