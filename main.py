@@ -12,7 +12,7 @@ if not env_loaded:
 
 # === Initialize Gemini Client ===
 def get_client():
-    api_key = ""
+    api_key = " "
     if not api_key:
         raise RuntimeError("GOOGLE_API_KEY not set in environment variables.")
     return genai.Client(api_key=api_key)
@@ -97,7 +97,7 @@ class PrettyPDF(FPDF):
 
 # === Main ===
 if __name__ == "__main__":
-    resume_path = ""
+    resume_path = " "
     output_pdf_path = "parsed_resume_pretty.pdf"
 
     if not os.path.isfile(resume_path):
