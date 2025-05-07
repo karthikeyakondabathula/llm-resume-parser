@@ -1,4 +1,5 @@
 import os
+import argparse  # 👈 added
 from dotenv import load_dotenv
 from google import genai
 from google.genai import types
@@ -13,7 +14,7 @@ if not env_loaded:
 
 # === Initialize Gemini Client ===
 def get_client():
-    api_key = " "
+    api_key = os.getenv("GOOGLE_API_KEY")
     if not api_key:
         raise RuntimeError("GOOGLE_API_KEY not set in environment variables.")
     return genai.Client(api_key=api_key)
@@ -44,6 +45,7 @@ Follow this JSON schema:
   "summary": "summary in the resume"
 }
 Only respond with valid JSON. Use empty strings or empty arrays if missing data.
+Return JSON as a single JSON OBJECT, not an array or list. Do NOT output multiple separate JSON objects.
     '''
     file_part = types.Part.from_bytes(data=content, mime_type="application/pdf")
     response = client.models.generate_content(
@@ -61,8 +63,8 @@ Only respond with valid JSON. Use empty strings or empty arrays if missing data.
 class PrettyPDF(FPDF):
     def __init__(self):
         super().__init__()
-        self.add_font('DejaVu', '', 'DejaVuSans.ttf', uni=True)
-        self.add_font('DejaVu', 'B', 'DejaVuSans-Bold.ttf', uni=True)
+        self.add_font('DejaVu', '', 'fonts/DejaVuSans.ttf', uni=True)
+        self.add_font('DejaVu', 'B', 'fonts/DejaVuSans-Bold.ttf', uni=True)
 
     def header(self):
         self.set_font("DejaVu", 'B', 16)
@@ -73,7 +75,7 @@ class PrettyPDF(FPDF):
         self.set_font("DejaVu", 'B', 14)
         self.cell(0, 10, title, ln=True)
         self.ln(1)
-        self.line(10, self.get_y(), 200, self.get_y())  # Draw horizontal line
+        self.line(10, self.get_y(), 200, self.get_y())
         self.ln(5)
 
     def field_label(self, label, value):
@@ -98,9 +100,16 @@ class PrettyPDF(FPDF):
 
 # === Main ===
 if __name__ == "__main__":
-    resume_path = "/content/Resume_Karthik.pdf"
-    output_pdf_path = "parsed_resume_pretty.pdf"
-    output_json_path = "parsed_resume.json"
+    parser = argparse.ArgumentParser(description="Resume Parser with Gemini + Pretty PDF Generator")
+    parser.add_argument("--input", required=True, help="Path to input PDF resume")
+    parser.add_argument("--output_json", default="parsed_resume.json", help="Path to output JSON file")
+    parser.add_argument("--output_pdf", default="output.pdf", help="Path to output pretty PDF file")
+
+    args = parser.parse_args()  # 👈 parse CLI args
+
+    resume_path = args.input
+    output_json_path = args.output_json
+    output_pdf_path = args.output_pdf
 
     if not os.path.isfile(resume_path):
         print(f"Error: File not found at '{resume_path}'.")
@@ -118,20 +127,11 @@ if __name__ == "__main__":
             if field in data:
                 data[field] = json_repair.loads(data[field])
 
-        # Export the JSON data to a file
         with open(output_json_path, 'w') as json_file:
             json.dump(data, json_file, indent=4)
         print(f"✅ JSON saved: {output_json_path}")
 
-        # Load Unicode font → Download DejaVu fonts if not already
-        if not os.path.isfile('DejaVuSans.ttf') or not os.path.isfile('DejaVuSans-Bold.ttf'):
-            import urllib.request
-            print("Downloading DejaVuSans fonts...")
-            urllib.request.urlretrieve('https://github.com/dejavu-fonts/dejavu-fonts/raw/master/ttf/DejaVuSans.ttf', 'DejaVuSans.ttf')
-            urllib.request.urlretrieve('https://github.com/dejavu-fonts/dejavu-fonts/raw/master/ttf/DejaVuSans-Bold.ttf', 'DejaVuSans-Bold.ttf')
-
         pdf = PrettyPDF()
-        pdf.title = f"Resume: {data.get('first_name', '')} {data.get('last_name', '')}"
         pdf.add_page()
 
         pdf.section_title("Contact Information")
@@ -145,12 +145,12 @@ if __name__ == "__main__":
             pdf.bullet_item(key, url)
 
         pdf.section_title("Summary")
-        pdf.set_font("Times", '', 12)  # Set font size to 12 for content
+        pdf.set_font("Times", '', 12)
         pdf.multi_cell(0, 8, data.get("summary", ""))
         pdf.ln(3)
 
         pdf.section_title("Skills")
-        pdf.set_font("Times", '', 12)  # Set font size to 12 for content
+        pdf.set_font("Times", '', 12)
         pdf.multi_cell(0, 8, data.get("skills", ""))
         pdf.ln(3)
 
